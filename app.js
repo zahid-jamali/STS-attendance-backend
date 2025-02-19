@@ -22,6 +22,10 @@ app.use(complainRoutes);
 app.use(leaveRoutes);
 app.use(holidaysRoutes)
 
+app.get("/health", (req, res,)=>{
+	res.status(200).json({message:"Server is running"})
+})
+
 console.log("Server is running...");
 app.listen(2222);
 
