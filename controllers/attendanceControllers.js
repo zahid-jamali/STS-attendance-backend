@@ -4,13 +4,49 @@ const { makeMyWork } = require("./worksControllers.js");
 const Holidays = require("../models/holidays"); // No need for `{}`
 const Leaves = require("../models/leaves")
 
+
+
+
+
+
+const adminCreatesAttendance = async (req, res) => {
+    try {
+        const { userId, date, entryTime, exitTime } = req.body;
+
+
+        const formattedDate = new Date(date).setHours(0, 0, 0, 0);
+        const newAttendance = new Attendance({
+            user: userId,
+            date: formattedDate,
+            entryTime: new Date(entryTime),
+            exitTime: exitTime ? new Date(exitTime) : null,
+            workHours: exitTime ? (new Date(exitTime) - new Date(entryTime)) / (1000 * 60 * 60) : 0
+        });
+
+        await newAttendance.save();
+        return res.status(201).json({ message: "Attendance added successfully"});
+ 
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+
+
+
+
+
+
+
 const getUserAttendance = async (req, res, next) => {
     console.log("Request received for user attendance");
 
     try {
         let { startingDate, endingDate, userId } = req.body;
 
-        if (!startingDate || !endingDate || !userId) {
+
+        if (!startingDate || !endingDate) {
             return res.status(400).json({ message: "Missing required fields." });
         }
 
@@ -20,22 +56,24 @@ const getUserAttendance = async (req, res, next) => {
         if (isNaN(startingDate) || isNaN(endingDate)) {
             return res.status(400).json({ message: "Invalid date format." });
         }
+        
+        let attendanceQuery = userId ? { user: userId } : {};
+        let leaveQuery = userId ? { user: userId, fromDate: { $lte: endingDate }, toDate: { $gte: startingDate }, Status: true } : { fromDate: { $lte: endingDate }, toDate: { $gte: startingDate }, Status: true };
 
-        // Fetch attendance records, holidays, and leave records
-        const [totalAttendance, totalHolidays, totalLeaves] = await Promise.all([
-            Attendance.find({ user: userId }),
+        const [totalAttendance, totalHolidays, totalLeaves, users] = await Promise.all([
+            Attendance.find(attendanceQuery).populate("user"),
             Holidays.find().select("date -_id"),
-            Leaves.find({ user: userId, fromDate: { $lte: endingDate }, toDate: { $gte: startingDate }, Status:true }) // Fetch leaves in range
+            Leaves.find(leaveQuery).populate("user"),
+            userId ? [] : User.find().select("_id Name")
         ]);
 
-        // Convert data to easy lookup formats
-       const attendanceMap = new Map(
+        const attendanceMap = new Map(
             totalAttendance.map((a) => {
                 if (!a.date) {
                     console.error("Undefined date in attendance record:", a);
-                    return [null, a];  // Returning null for debugging
+                    return [null, a];
                 }
-                return [a.date.toISOString().split("T")[0], a];
+                return [a.date.toISOString().split("T")[0] + "-" + a.user._id, a];
             })
         );
 
@@ -49,13 +87,13 @@ const getUserAttendance = async (req, res, next) => {
             })
         );
 
-        // Create leave date ranges
-        let leaveSet = new Set();
+        let leaveSet = new Map();
         totalLeaves.forEach((leave) => {
             let leaveStart = new Date(leave.fromDate);
             let leaveEnd = new Date(leave.toDate);
             while (leaveStart <= leaveEnd) {
-                leaveSet.add(leaveStart.toISOString().split("T")[0]);
+                let key = leaveStart.toISOString().split("T")[0] + "-" + leave.user._id;
+                leaveSet.set(key, { date: leaveStart.toISOString().split("T")[0], user: leave.user, Remarks: "On Leave" });
                 leaveStart.setDate(leaveStart.getDate() + 1);
             }
         });
@@ -65,28 +103,41 @@ const getUserAttendance = async (req, res, next) => {
 
         while (currentDate <= endingDate) {
             let dateString = currentDate.toISOString().split("T")[0];
+            let dailyAttendance = { date: dateString, records: [] };
 
-            if (attendanceMap.has(dateString)) {
-                myAttendance.push(attendanceMap.get(dateString));
-            } else if (leaveSet.has(dateString)) {
-                myAttendance.push({ date: dateString, Remarks: "On Leave" });
-            } else if (holidaySet.has(dateString)) {
-                myAttendance.push({ date: dateString, Remarks: "Holiday" });
-            } else if (currentDate.getDay() === 6) {
-                myAttendance.push({ date: dateString, Remarks: "Sunday" });
+            if (userId) {
+                let key = dateString + "-" + userId;
+                dailyAttendance.records.push(
+                    attendanceMap.get(key) || 
+                    leaveSet.get(key) ||
+                    (holidaySet.has(dateString) ? { user: { _id: userId, name: "Unknown" }, Remarks: "Holiday" } :
+                    currentDate.getDay() === 6 ? { user: { _id: userId, name: "Unknown" }, Remarks: "Sunday" } :
+                    { user: { _id: userId, name: "Unknown" }, Remarks: "Absent" })
+                );
             } else {
-                myAttendance.push({ date: dateString, Remarks: "Absent" });
+                for (let user of users) {
+                    let key = dateString + "-" + user._id;
+                    dailyAttendance.records.push(
+                        attendanceMap.get(key) || 
+                        leaveSet.get(key) ||
+                        (holidaySet.has(dateString) ? { user: user, Remarks: "Holiday" } :
+                        currentDate.getDay() === 6 ? { user: user, Remarks: "Sunday" } :
+                        { user: user, Remarks: "Absent" })
+                    );
+                }
             }
 
+            myAttendance.push(dailyAttendance);
             currentDate.setDate(currentDate.getDate() + 1);
         }
-
         res.status(200).json(myAttendance);
     } catch (error) {
         console.error("Error fetching attendance:", error);
         res.status(500).json({ message: "Server error" });
     }
 };
+
+
 
 
 
@@ -208,4 +259,4 @@ const markExit = async (req, res) => {
 };
 
 
-module.exports={markEntry, markExit, getUsersAttendanceByDate, getUserAttendance};
+module.exports={markEntry, markExit, getUsersAttendanceByDate, getUserAttendance, adminCreatesAttendance};

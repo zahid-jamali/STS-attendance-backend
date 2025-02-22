@@ -17,7 +17,7 @@ const schema=mongoose.Schema({
 	fromDate:{
 		type:Date,
 		required: true,
-	},
+	}, 
 	toDate:{
 		type:Date,
 		required:true,

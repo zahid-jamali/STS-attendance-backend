@@ -5,7 +5,7 @@ const bcrypt=require("bcrypt");
 
 const getAllUsers=async (req, res, next)=>{
 	try{
-		const users=await User.find();
+		const users=await User.find({});
 		res.status(200).send(users);
 	}catch(e){
 		console.error(e);
@@ -79,6 +79,7 @@ const createUser = async (req, res) => {
 
 const login=async (req, res, next)=>{
 	const {email, password}=req.body;
+    console.log(req.body);
 	console.log("Login Request!");
 	const usr=await User.findOne({Email:email.toLowerCase()});
 
