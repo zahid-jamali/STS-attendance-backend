@@ -1,24 +1,35 @@
-const Project=require("../models/project");
+const Project = require("../models/project");
 
-// Route is not setisfied for the this controller
-const updateProject=async(req, res, next)=>{
-	const {projectId, title, type, desc, deadline, team, is_active}=req.body;
+const updateProject = async (req, res, next) => {
+  const { projectId, title, type, desc, deadline, team, is_active } = req.body;
+  console.log(req.body);
 
-	try{
-		let project=await Project.find({_id: projectId});
-		project.Title=title;
-		project.ProjectType=type;
-		project.Description=desc;
-		project.Deadline=deadline;
-		proejct.Team=team;
-		project.is_Active=is_active;
-		await project.save();
-		res.status(200).json({message:"Project updated successfully!"});
-	}catch(e){
-		console.error(e);
-		res.status(500).json({message:"Internal server error!"});
-	}
-}
+  try {
+    let project = await Project.findById(projectId); // Find by ID
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found!" });
+    }
+
+    // Update fields
+    project.Title = title;
+    project.ProjectType = type;
+    project.Description = desc;
+    project.Deadline = deadline;
+    project.Team = team;
+    project.is_Active = is_active;
+
+    await project.save(); // Save changes
+
+    res.status(200).json({ message: "Project updated successfully!" });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: "Internal server error!" });
+  }
+};
+
+module.exports = updateProject;
+
 
 
 
@@ -66,4 +77,4 @@ const createProject=async (req, res, next)=>{
 	}
 }
 
-module.exports={createProject, getMyProjects, getAllProjects};
+module.exports={createProject, getMyProjects, getAllProjects, updateProject};
