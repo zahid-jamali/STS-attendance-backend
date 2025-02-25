@@ -62,7 +62,7 @@ const getUserAttendance = async (req, res, next) => {
 
         const [totalAttendance, totalHolidays, totalLeaves, users] = await Promise.all([
             Attendance.find(attendanceQuery).populate("user"),
-            Holidays.find().select("date -_id"),
+            Holidays.find().select("HolidayDate -_id"),
             Leaves.find(leaveQuery).populate("user"),
             userId ? [] : User.find().select("_id Name")
         ]);
@@ -79,11 +79,11 @@ const getUserAttendance = async (req, res, next) => {
 
         const holidaySet = new Set(
             totalHolidays.map((h) => {
-                if (!h.date) {
+                if (!h.HolidayDate) {
                     console.error("Undefined date in holiday record:", h);
                     return null;
                 }
-                return h.date.toISOString().split("T")[0];
+                return h.HolidayDate.toISOString().split("T")[0];
             })
         );
 

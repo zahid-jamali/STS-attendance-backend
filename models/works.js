@@ -3,7 +3,7 @@ const mongoose=require("mongoose");
 const schema=mongoose.Schema({
 	Project:{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User", 
+        ref: "Project", 
         required: true
     },
     User:{

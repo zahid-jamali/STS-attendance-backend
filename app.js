@@ -6,6 +6,7 @@ const projectRoutes=require("./routes/projectRoutes.js");
 const complainRoutes=require("./routes/complainRoutes")
 const leaveRoutes=require("./routes/leaveRoutes");
 const holidaysRoutes=require("./routes/holidaysRoutes");
+const worksRoutes=require("./routes/workRoutes");
 const conn=require("./conn.js");
 
 
@@ -20,7 +21,8 @@ app.use(attendanceRoutes);
 app.use(projectRoutes);
 app.use(complainRoutes);
 app.use(leaveRoutes);
-app.use(holidaysRoutes)
+app.use(holidaysRoutes);
+app.use(worksRoutes);
 
 app.get("/health", (req, res,)=>{
 	res.status(200).json({message:"Server is running"})
