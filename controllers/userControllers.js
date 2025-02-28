@@ -16,8 +16,7 @@ const getAllUsers=async (req, res, next)=>{
 
 const updateUser = async (req, res, next) => {
     try {
-        console.log(req.body);
-        const { userId, name, email, phone, bio, newPassword, oldPassword } = req.body;
+        const { userId, name, email, phone, bio, newPassword, oldPassword, admin, is_admin, is_active } = req.body;
 
         // Check if user exists
         const usr = await User.findById(userId);
@@ -37,6 +36,10 @@ const updateUser = async (req, res, next) => {
             if (!isMatch) {
                 return res.status(400).json({ message: "Old Password does not match!" });
             }
+            usr.Password = await bcrypt.hash(newPassword, 10);
+        }else if(admin){
+            usr.is_Admin=is_admin;
+            usr.is_Active=is_active;
             usr.Password = await bcrypt.hash(newPassword, 10);
         }
 

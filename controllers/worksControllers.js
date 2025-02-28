@@ -13,6 +13,16 @@ const getProjectWork=async(req, res,next)=>{
     }
 }
 
+const getMyWork=async(req, res)=>{
+    try{
+        let {userId, }=req.body;
+        const myworks=await Works.find({User:userId}).populate("Project");
+        res.status(200).json(myworks);
+    }catch(e){
+        console.log(e);
+        res.status(500).json({message:"Internal Server Error"});
+    }
+}
 
 
 
@@ -28,4 +38,4 @@ const makeMyWork = async (projectId, userId, works) => {
     }
 };
 
-module.exports = { makeMyWork,  getProjectWork, };
+module.exports = { makeMyWork,  getProjectWork, getMyWork};
