@@ -7,7 +7,9 @@ const complainRoutes=require("./routes/complainRoutes")
 const leaveRoutes=require("./routes/leaveRoutes");
 const holidaysRoutes=require("./routes/holidaysRoutes");
 const worksRoutes=require("./routes/workRoutes");
+const goalRoutes=require("./routes/goalRoutes");
 const conn=require("./conn.js");
+require("dotenv").config();
 
 
 conn();
@@ -23,6 +25,7 @@ app.use(complainRoutes);
 app.use(leaveRoutes);
 app.use(holidaysRoutes);
 app.use(worksRoutes);
+app.use(goalRoutes);
 
 app.get("/health", (req, res,)=>{
 	res.status(200).json({message:"Server is running"})

@@ -1,7 +1,8 @@
 const Attendance = require("../models/attendance");
 const User = require("../models/user.js");
 const { makeMyWork } = require("./worksControllers.js");
-const Holidays = require("../models/holidays"); // No need for `{}`
+const { submitGoal} = require("./goalsControllers.js") ;
+const Holidays = require("../models/holidays");
 const Leaves = require("../models/leaves")
 
 
@@ -227,7 +228,7 @@ const markEntry = async (req, res) => {
 const markExit = async (req, res) => {
     console.log(req.body);
     try {
-        const { userId, projectId, works } = req.body;
+        const { userId, projectId, works, goal } = req.body;
 
         
         const attendance = await Attendance.findOne({
@@ -248,8 +249,12 @@ const markExit = async (req, res) => {
         attendance.workHours = (attendance.exitTime - attendance.entryTime) / (1000 * 60 * 60); 
 
         await attendance.save();
-
-        makeMyWork(projectId, userId, works);
+        if(works!=""){
+            await makeMyWork(projectId, userId, works);    
+        }else if(goal._id){
+            await submitGoal(goal)
+        }
+        
 
 
         res.status(200).json({ message: "Exit marked successfully", attendance });

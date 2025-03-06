@@ -17,6 +17,28 @@ const schema=mongoose.Schema({
 		type:Date,
 		required: true,
 	},
+	Goals:[{
+		Goal:{
+			type:String,
+			required: true,
+		},
+		User: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User", 
+        required: true
+    	},
+    	Status:{
+    		type: Number,
+    		default:0,
+    	},
+    	Completion_Date:{
+    		type:Date,
+    	},
+    	Steps:{
+    		type:Number,
+    		default: 0
+    	}
+	}],
 	Team:[{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User", 

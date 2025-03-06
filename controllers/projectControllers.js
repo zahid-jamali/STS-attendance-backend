@@ -36,7 +36,7 @@ module.exports = updateProject;
 
 const getAllProjects=async (req, res, next)=>{
 	try{
-		const P=await Project.find().populate("Team");
+		const P=await Project.find().populate("Team Goals.User");
 		res.status(200).json(P);
 	}catch(e){
 		console.log(e);

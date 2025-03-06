@@ -1,13 +1,5 @@
-const bcrypt = require("bcrypt");
+require("dotenv").config();
 
-const testHash = async () => {
-  const plainPassword = "admin"; // Change to your test password
-  const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
-  console.log("Generated Hashed Password:", hashedPassword);
-  const isMatch = await bcrypt.compare(plainPassword, hashedPassword);
-
-  console.log("Password Comparison Result:", isMatch ? "✅ Match" : "❌ No Match");
-};
-
-testHash();
+let url=process.env.DB_URL;
+console.log(url);
