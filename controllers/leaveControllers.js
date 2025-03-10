@@ -19,7 +19,7 @@ const getLeavesForUsers=async(req, res, next)=>{
 
 const getLeaves=async(req, res,next)=>{
 	try{
-		const L=await Leaves.find().populate("user");
+		const L=await Leaves.find({ "user.is_Active": true }).populate("user");
 		const H=await Holidays.find();
 		res.status(200).json({"Leaves":L, "Holidays":H});
 	}catch(e){

@@ -65,7 +65,7 @@ const getUserAttendance = async (req, res, next) => {
             Attendance.find(attendanceQuery).populate("user"),
             Holidays.find().select("HolidayDate -_id"),
             Leaves.find(leaveQuery).populate("user"),
-            userId ? [] : User.find().select("_id Name")
+            userId ? [] : User.find({is_Active:true}).select("_id Name")
         ]);
 
         const attendanceMap = new Map(
@@ -154,7 +154,7 @@ const getUsersAttendanceByDate = async (req, res) => {
         selectedDate.setHours(0, 0, 0, 0); // Normalize to start of the day
 
         // Fetch all users
-        const users = await User.find({}, "_id Name");
+        const users = await User.find({is_Active:true}, "_id Name");
 
         // Fetch attendance records for the given date
         const attendanceRecords = await Attendance.find({

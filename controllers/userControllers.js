@@ -5,12 +5,24 @@ const bcrypt=require("bcrypt");
 
 const getAllUsers=async (req, res, next)=>{
 	try{
-		const users=await User.find({});
+		const users=await User.find({is_Active:true});
 		res.status(200).send(users);
 	}catch(e){
 		console.error(e);
 		return res.status(500).json({message:"Internal server error"})
 	}
+}
+
+
+
+const getTotalUsers=async (req, res, next)=>{
+    try{
+        const users=await User.find();
+        res.status(200).send(users);
+    }catch(e){
+        console.error(e);
+        return res.status(500).json({message:"Internal server error"})
+    }
 }
 
 
@@ -102,4 +114,4 @@ const login=async (req, res, next)=>{
 
 }
 
-module.exports={login, createUser, getAllUsers, updateUser};
+module.exports={login, createUser, getAllUsers, updateUser, getTotalUsers};
