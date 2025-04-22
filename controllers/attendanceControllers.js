@@ -51,12 +51,12 @@ const getUserAttendance = async (req, res, next) => {
           user: userId,
           fromDate: { $lte: endingDate },
           toDate: { $gte: startingDate },
-          Status: true,
+          Status: "Accepted",
         }
       : {
           fromDate: { $lte: endingDate },
           toDate: { $gte: startingDate },
-          Status: true,
+          Status: "Accepted",
         };
 
     const [totalAttendance, totalHolidays, totalLeaves, users] =
