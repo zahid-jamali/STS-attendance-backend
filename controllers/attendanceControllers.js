@@ -116,7 +116,7 @@ const getUserAttendance = async (req, res, next) => {
             leaveSet.get(key) ||
             (holidaySet.has(dateString)
               ? { user: { _id: userId, name: "Unknown" }, Remarks: "Holiday" }
-              : currentDate.getDay() === 0
+              : currentDate.getDay() === 6
               ? { user: { _id: userId, name: "Unknown" }, Remarks: "Sunday" }
               : { user: { _id: userId, name: "Unknown" }, Remarks: "Absent" })
         );
