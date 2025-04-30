@@ -8,11 +8,9 @@ const Leaves = require("../models/leaves");
 const adminCreatesAttendance = async (req, res) => {
   try {
     const { userId, date, entryTime, exitTime } = req.body;
-
-    const formattedDate = new Date(date).setHours(0, 0, 0, 0);
     const newAttendance = new Attendance({
       user: userId,
-      date: formattedDate,
+      date: new Date(date),
       entryTime: new Date(entryTime),
       exitTime: exitTime ? new Date(exitTime) : null,
       workHours: exitTime
@@ -69,22 +67,26 @@ const getUserAttendance = async (req, res, next) => {
 
     const attendanceMap = new Map(
       totalAttendance.map((a) => {
-        if (!a.date) {
-          console.error("Undefined date in attendance record:", a);
+        let dateValue = a.date instanceof Date ? a.date : new Date(a.date);
+        if (!dateValue || isNaN(dateValue)) {
+          console.error("Invalid or missing date in attendance record:", a);
           return [null, a];
         }
-        return [a.date.toISOString().split("T")[0] + "-" + a.user._id, a];
+        const key = dateValue.toISOString().split("T")[0] + "-" + a.user._id;
+        return [key, a];
       })
     );
 
     const holidaySet = new Set(
-      totalHolidays.map((h) => {
-        if (!h.HolidayDate) {
-          console.error("Undefined date in holiday record:", h);
-          return null;
-        }
-        return h.HolidayDate.toISOString().split("T")[0];
-      })
+      totalHolidays
+        .map((h) => {
+          if (!h.HolidayDate || !(h.HolidayDate instanceof Date)) {
+            console.error("Invalid holiday date:", h);
+            return null;
+          }
+          return h.HolidayDate.toISOString().split("T")[0];
+        })
+        .filter(Boolean)
     );
 
     let leaveSet = new Map();
@@ -111,33 +113,34 @@ const getUserAttendance = async (req, res, next) => {
 
       if (userId) {
         let key = dateString + "-" + userId;
-        dailyAttendance.records.push(
+        let record =
           attendanceMap.get(key) ||
-            leaveSet.get(key) ||
-            (holidaySet.has(dateString)
-              ? { user: { _id: userId, name: "Unknown" }, Remarks: "Holiday" }
-              : currentDate.getDay() === 6
-              ? { user: { _id: userId, name: "Unknown" }, Remarks: "Sunday" }
-              : { user: { _id: userId, name: "Unknown" }, Remarks: "Absent" })
-        );
+          leaveSet.get(key) ||
+          (holidaySet.has(dateString)
+            ? { user: { _id: userId, Name: "Unknown" }, Remarks: "Holiday" }
+            : currentDate.getDay() === 0
+            ? { user: { _id: userId, Name: "Unknown" }, Remarks: "Sunday" }
+            : { user: { _id: userId, Name: "Unknown" }, Remarks: "Absent" });
+        dailyAttendance.records.push(record);
       } else {
         for (let user of users) {
           let key = dateString + "-" + user._id;
-          dailyAttendance.records.push(
+          let record =
             attendanceMap.get(key) ||
-              leaveSet.get(key) ||
-              (holidaySet.has(dateString)
-                ? { user: user, Remarks: "Holiday" }
-                : currentDate.getDay() === 0
-                ? { user: user, Remarks: "Sunday" }
-                : { user: user, Remarks: "Absent" })
-          );
+            leaveSet.get(key) ||
+            (holidaySet.has(dateString)
+              ? { user: user, Remarks: "Holiday" }
+              : currentDate.getDay() === 0
+              ? { user: user, Remarks: "Sunday" }
+              : { user: user, Remarks: "Absent" });
+          dailyAttendance.records.push(record);
         }
       }
 
       myAttendance.push(dailyAttendance);
       currentDate.setDate(currentDate.getDate() + 1);
     }
+
     res.status(200).json(myAttendance);
   } catch (error) {
     console.error("Error fetching attendance:", error);
