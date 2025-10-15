@@ -1,7 +1,8 @@
 const mongoose=require("mongoose");
 
 const conn=()=>{
-	let url="mongodb+srv://zahidjamali4848:taoZZF5ePpDF1HF0@sts-attendance.y6trb.mongodb.net/STS-attendance"
+	let url=process.env.MONGODB_URL;
 	return mongoose.connect(url).then(console.log("Database connected!"));
 }
+//zahidjamali4848-taoZZF5ePpDF1HF0
 module.exports=conn;
